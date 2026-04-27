@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://localhost:5000",
+  baseURL: "https://student-performance-dashboard-7v25.onrender.com",
   headers: {
     "Content-Type": "application/json",
   },

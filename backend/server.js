@@ -15,7 +15,18 @@ const app = express();
 
 // --- MIDDLEWARE ---
 app.use(helmet()); // Security headers
-app.use(cors()); // Enable Cross-Origin Resource Sharing
+
+// Updated CORS Configuration - This is what allows Vercel to fetch data!
+app.use(cors({
+  origin: [
+    process.env.CLIENT_ORIGIN, // Put your Vercel URL in Render's Env Variables
+    "http://localhost:3000",   // For local React development
+    "http://localhost:5173"    // For local Vite development
+  ],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  credentials: true // Crucial if you use JWT cookies or tokens
+}));
+
 app.use(express.json()); // Body parser
 
 // Log requests in development mode
