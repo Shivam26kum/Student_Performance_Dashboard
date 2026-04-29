@@ -1,22 +1,24 @@
 import { useState, useEffect } from "react";
 import { postNotice, getNotices, deleteNotice, updateNotice } from "../../api/adminApi"; 
-import { Bell, Send, Users, FileText, Trash2, Clock, Edit3, X, CheckCircle } from "lucide-react";
-import { useToaster } from "react-toastella"; 
+import { Bell, Send, Users, FileText, Trash2, Clock, Edit3, X, CheckCircle, AlertCircle } from "lucide-react";
 
 export default function AdminNotices() {
-  const { notify } = useToaster();
-
-  // Safe toast wrapper to prevent React render crashes
-  const showToast = (message, type = "success") => {
-    setTimeout(() => {
-      notify(message, { type });
-    }, 0);
-  };
-
   const [loading, setLoading] = useState(false);
   const [allNotices, setAllNotices] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [notice, setNotice] = useState({ title: "", content: "", audience: "all" });
+  
+  // Custom state for handling success/error messages
+  const [feedback, setFeedback] = useState(null);
+
+  // Helper function to show inline messages instead of toasts
+  const showMessage = (text, type = "success") => {
+    setFeedback({ text, type });
+    // Auto-hide the message after 4 seconds
+    setTimeout(() => {
+      setFeedback(null);
+    }, 4000);
+  };
 
   const fetchNotices = async () => {
     try {
@@ -24,7 +26,7 @@ export default function AdminNotices() {
       setAllNotices(data);
     } catch (err) {
       console.error("Failed to fetch notices");
-      showToast("Failed to load existing notices.", "error");
+      showMessage("Failed to load existing notices.", "error");
     }
   };
 
@@ -36,17 +38,16 @@ export default function AdminNotices() {
     try {
       if (editingId) {
         const res = await updateNotice(editingId, notice);
-        showToast(res.data?.message || "Notice Updated Successfully!", "success");
+        showMessage(res.data?.message || "Notice Updated Successfully!", "success");
       } else {
         const res = await postNotice(notice);
-        showToast(res.data?.message || "Notice Posted Successfully!", "success");
+        showMessage(res.data?.message || "Notice Posted Successfully!", "success");
       }
       resetForm();
       fetchNotices();
     } catch (err) {
       console.error("Notice Error Details:", err.response?.data || err.message);
-      // Once Render updates, this will show the exact MongoDB error!
-      showToast(err.response?.data?.message || "Failed to post notice. Check backend.", "error");
+      showMessage(err.response?.data?.message || "Failed to post notice. Check backend.", "error");
     } finally {
       setLoading(false);
     }
@@ -67,11 +68,11 @@ export default function AdminNotices() {
     if (!window.confirm("Permanent delete this notice?")) return;
     try {
       const res = await deleteNotice(id);
-      showToast(res.data?.message || "Notice deleted successfully!", "success");
+      showMessage(res.data?.message || "Notice deleted successfully!", "success");
       setAllNotices(allNotices.filter(n => n._id !== id));
     } catch (err) {
       console.error("Delete Error:", err);
-      showToast(err.response?.data?.message || "Delete failed.", "error");
+      showMessage(err.response?.data?.message || "Delete failed.", "error");
     }
   };
 
@@ -85,6 +86,21 @@ export default function AdminNotices() {
           <p className="text-sm md:text-base text-gray-500 mt-1">Post updates or manage existing announcements</p>
         </div>
       </div>
+
+      {/* CUSTOM INLINE FEEDBACK BANNER */}
+      {feedback && (
+        <div className={`mb-6 p-4 rounded-lg flex items-center justify-between shadow-sm border transition-all ${
+          feedback.type === 'error' ? 'bg-red-50 border-red-200 text-red-700' : 'bg-emerald-50 border-emerald-200 text-emerald-700'
+        }`}>
+          <div className="flex items-center gap-3">
+            {feedback.type === 'error' ? <AlertCircle size={20} /> : <CheckCircle size={20} />}
+            <span className="font-medium text-sm">{feedback.text}</span>
+          </div>
+          <button onClick={() => setFeedback(null)} className="opacity-70 hover:opacity-100 transition-opacity">
+            <X size={18} />
+          </button>
+        </div>
+      )}
 
       <div className="grid lg:grid-cols-3 gap-6 md:gap-8">
         

@@ -364,7 +364,15 @@ exports.getAdminStats = async (req, res) => {
 
 exports.createNotice = async (req, res) => {
   try {
-    const notice = await Notice.create({ ...req.body, school: req.user.school, postedBy: req.user._id });
+    // FIX APPLIED HERE: Added authorName and authorRole pulling from req.user
+    const notice = await Notice.create({ 
+      ...req.body, 
+      school: req.user.school, 
+      postedBy: req.user._id,
+      authorName: req.user.name || "School Admin",
+      authorRole: "Admin" 
+    });
+    
     res.status(201).json({ message: "Notice posted successfully!", notice });
   } catch (error) {
     console.error("Create Notice Error:", error);
