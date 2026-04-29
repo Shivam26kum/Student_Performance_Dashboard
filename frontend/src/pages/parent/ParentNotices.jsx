@@ -28,32 +28,35 @@ export default function ParentNotices() {
   }
 
   return (
-    <div className="h-full flex flex-col max-w-6xl mx-auto overflow-hidden p-4 font-sans">
+    // Fixed: Added responsive padding to the main wrapper
+    <div className="h-full flex flex-col max-w-6xl mx-auto overflow-hidden p-4 sm:p-6 lg:p-8 font-sans">
       
       {/* --- STATIC HEADER --- */}
-      <div className="shrink-0 bg-white p-6 rounded-xl shadow-sm mb-4">
-        <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-          <Bell className="text-orange-500" size={24} /> School Notices
+      {/* Fixed: Adjusted padding for mobile and added subtle border */}
+      <div className="shrink-0 bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-gray-100 mb-4 sm:mb-6">
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-800 flex items-center gap-2 sm:gap-3">
+          <Bell className="text-orange-500 sm:w-7 sm:h-7" size={24} /> School Notices
         </h2>
-        <p className="text-sm font-medium text-gray-500 mt-1">
+        <p className="text-xs sm:text-sm font-medium text-gray-500 mt-1">
           Important announcements and updates from the administration.
         </p>
       </div>
 
       {/* --- SCROLLABLE CONTENT --- */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar space-y-4 pb-4">
+      <div className="flex-1 overflow-y-auto custom-scrollbar space-y-4 sm:space-y-5 pb-4 sm:pr-2">
         {notices.map((notice, i) => (
-          <div key={i} className="bg-white rounded-xl shadow-sm p-6 flex gap-4 hover:bg-orange-50/10 transition-colors">
-            <div className="shrink-0">
-              <div className="w-12 h-12 bg-orange-50 text-orange-600 rounded-xl flex items-center justify-center">
-                <Bell size={24} />
+          // Fixed: Scaled padding, border radius, and added border
+          <div key={i} className="bg-white rounded-2xl sm:rounded-[1.5rem] shadow-sm border border-gray-100 p-4 sm:p-6 flex gap-3 sm:gap-5 hover:border-orange-100 transition-colors">
+            <div className="shrink-0 mt-0.5 sm:mt-1">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-orange-50 text-orange-600 rounded-xl sm:rounded-2xl flex items-center justify-center">
+                <Bell size={20} className="sm:w-6 sm:h-6" />
               </div>
             </div>
-            <div className="flex-1">
-              <h3 className="text-lg font-bold text-gray-800 leading-tight">
+            <div className="flex-1 min-w-0">
+              <h3 className="text-base sm:text-lg font-bold text-gray-800 leading-tight pr-2">
                 {notice.title}
               </h3>
-              <p className="text-[10px] font-bold text-gray-400 uppercase flex items-center gap-1.5 mt-1 mb-3">
+              <p className="text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase flex items-center gap-1.5 mt-1.5 mb-3 sm:mb-4 tracking-wider">
                 <Calendar size={12} className="text-gray-300" /> 
                 {new Date(notice.createdAt).toLocaleDateString('en-US', { 
                   weekday: 'long', 
@@ -62,13 +65,23 @@ export default function ParentNotices() {
                   day: 'numeric' 
                 })}
               </p>
-              <p className="text-sm font-medium text-gray-600 leading-relaxed whitespace-pre-line bg-gray-50/50 p-4 rounded-xl">
+              <p className="text-xs sm:text-sm font-medium text-gray-600 leading-relaxed whitespace-pre-line bg-gray-50/50 border border-gray-50 p-3 sm:p-4 rounded-xl">
                 {notice.content}
               </p>
             </div>
           </div>
         ))}
       </div>
+
+      {/* Global Custom Scrollbar Styling */}
+      <style dangerouslySetInnerHTML={{__html: `
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #e2e8f0; border-radius: 10px; }
+        @media (min-width: 640px) {
+          .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+        }
+      `}} />
     </div>
   );
 }
@@ -77,20 +90,22 @@ export default function ParentNotices() {
 
 function PageSkeleton() {
   return (
-    <div className="max-w-6xl mx-auto p-4 animate-pulse h-full overflow-hidden flex flex-col gap-4">
-      <div className="shrink-0 h-32 bg-gray-200 rounded-xl"></div>
-      <div className="flex-1 bg-gray-200 rounded-xl min-h-0"></div>
+    // Fixed: Matches the responsive layout padding
+    <div className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8 animate-pulse h-full overflow-hidden flex flex-col gap-4 sm:gap-6 w-full">
+      <div className="shrink-0 h-24 sm:h-32 bg-gray-200 rounded-2xl w-full"></div>
+      <div className="flex-1 bg-gray-200 rounded-[1.5rem] min-h-0 w-full"></div>
     </div>
   );
 }
 
 function EmptyState({ message, icon, isChild = false }) {
   return (
-    <div className={`flex flex-col items-center justify-center text-gray-400 py-20 ${
-      isChild ? 'h-full bg-white rounded-xl shadow-sm' : 'h-[calc(100vh-10rem)]'
+    // Fixed: Ensure the empty state aligns properly on small screens
+    <div className={`flex flex-col items-center justify-center text-gray-400 py-20 px-4 text-center w-full ${
+      isChild ? 'h-full bg-white rounded-2xl shadow-sm border border-gray-100' : 'h-[calc(100vh-10rem)]'
     }`}>
-      <div className="mb-4 opacity-50 text-gray-300">{icon}</div>
-      <p className="font-bold text-gray-500">{message}</p>
+      <div className="mb-4 opacity-30 text-gray-400">{icon}</div>
+      <p className="font-bold text-gray-500 uppercase tracking-widest text-sm">{message}</p>
     </div>
   );
 }

@@ -28,9 +28,10 @@ exports.createTeacher = async (req, res) => {
       name, email, password: hashed, phone, assignedClasses, school: schoolId 
     });
     
-    res.status(201).json({ message: "Teacher created successfully", teacher });
+    res.status(201).json({ message: "Teacher created successfully!", teacher });
   } catch (error) {
-    res.status(500).json({ message: "Error creating teacher" });
+    console.error("Create Teacher Error:", error);
+    res.status(400).json({ message: error.message || "Error creating teacher" });
   }
 };
 
@@ -50,9 +51,10 @@ exports.updateTeacher = async (req, res) => {
     ); 
 
     if (!updatedTeacher) return res.status(404).json({ message: "Teacher not found" });
-    res.json(updatedTeacher);
+    res.json({ message: "Teacher updated successfully!", teacher: updatedTeacher });
   } catch (error) {
-    res.status(500).json({ message: "Error updating teacher" });
+    console.error("Update Teacher Error:", error);
+    res.status(400).json({ message: error.message || "Error updating teacher" });
   }
 };
 
@@ -66,9 +68,10 @@ exports.deleteTeacher = async (req, res) => {
     await Student.updateMany({ teacher: teacherId, school: schoolId }, { $set: { teacher: null } });
     await Schedule.deleteMany({ teacher: teacherId, school: schoolId });
     
-    res.json({ message: "Teacher and linked records removed successfully" });
+    res.json({ message: "Teacher and linked records removed successfully!" });
   } catch (error) {
-    res.status(500).json({ message: "Server Error" });
+    console.error("Delete Teacher Error:", error);
+    res.status(500).json({ message: error.message || "Server Error" });
   }
 };
 
@@ -78,7 +81,7 @@ exports.getAllTeachers = async (req, res) => {
       .select("-password").sort({ name: 1 }).lean();
     res.json(teachers);
   } catch (error) {
-    res.status(500).json({ message: "Server Error" });
+    res.status(500).json({ message: error.message || "Server Error" });
   }
 };
 
@@ -91,9 +94,10 @@ exports.createClass = async (req, res) => {
     if (existingClass) return res.status(400).json({ message: "Class already exists" });
 
     const newClass = await Class.create({ name, school: req.user.school });
-    res.status(201).json(newClass);
+    res.status(201).json({ message: "Class created successfully!", class: newClass });
   } catch (error) {
-    res.status(500).json({ message: "Error creating class" });
+    console.error("Create Class Error:", error);
+    res.status(400).json({ message: error.message || "Error creating class" });
   }
 };
 
@@ -103,7 +107,6 @@ exports.getClasses = async (req, res) => {
     const classes = await Class.find({ school: schoolId }).lean();
     
     const result = await Promise.all(classes.map(async (cls) => {
-      // FIX: Fuzzy matching so "Grade 10" matches "10" 
       const rawClassName = cls.name.replace(/class|grade/i, '').trim();
       const classRegex = new RegExp(rawClassName, 'i');
 
@@ -112,16 +115,17 @@ exports.getClasses = async (req, res) => {
     }));
     res.json(result);
   } catch (error) {
-    res.status(500).json({ message: "Server Error" });
+    res.status(500).json({ message: error.message || "Server Error" });
   }
 };
 
 exports.deleteClass = async (req, res) => {
   try {
     await Class.findOneAndDelete({ _id: req.params.id, school: req.user.school });
-    res.json({ message: "Class deleted successfully" });
+    res.json({ message: "Class deleted successfully!" });
   } catch (error) {
-    res.status(500).json({ message: "Server Error" });
+    console.error("Delete Class Error:", error);
+    res.status(500).json({ message: error.message || "Server Error" });
   }
 };
 
@@ -131,7 +135,6 @@ exports.setClassFee = async (req, res) => {
     const { monthly, busFee, otherFee, penalty } = req.body;
     const schoolId = req.user.school;
 
-    // 1. Update the Class Model with all values
     const updatedClass = await Class.findOneAndUpdate(
       { _id: id, school: schoolId },
       { 
@@ -145,16 +148,13 @@ exports.setClassFee = async (req, res) => {
 
     if (!updatedClass) return res.status(404).json({ message: "Class not found" });
 
-    // 2. Calculate dynamic student total
     const baseFees = (Number(monthly) || 0) + (Number(busFee) || 0) + (Number(otherFee) || 0);
     const penaltyAmount = isLatePayment() ? (Number(penalty) || 0) : 0;
     const finalFeesTotal = baseFees + penaltyAmount;
 
-    // FIX: Extract core number/name to ensure students actually get updated!
     const rawClassName = updatedClass.name.replace(/class|grade/i, '').trim();
     const classRegex = new RegExp(rawClassName, 'i');
 
-    // 3. Sync all students in this specific class
     await Student.updateMany(
       { school: schoolId, class: classRegex },
       { 
@@ -163,10 +163,10 @@ exports.setClassFee = async (req, res) => {
       }
     );
 
-    res.json({ message: `Structure updated for ${updatedClass.name}. Students synchronized.` });
+    res.json({ message: `Fee structure updated for ${updatedClass.name}. Students synchronized!` });
   } catch (error) {
     console.error("Set Fee Error:", error);
-    res.status(500).json({ message: "Internal server error during fee sync" });
+    res.status(500).json({ message: error.message || "Internal server error during fee sync" });
   }
 };
 
@@ -180,7 +180,6 @@ exports.createStudent = async (req, res) => {
     const exists = await Student.findOne({ rollNo, class: cls, section, school: schoolId });
     if (exists) return res.status(400).json({ message: "Student roll number already exists" });
 
-    // FIX: Fuzzy match Class policy to ensure new students get assigned fees instantly
     const rawClassName = cls.replace(/class|grade/i, '').trim();
     const classRegex = new RegExp(rawClassName, 'i');
     
@@ -201,9 +200,10 @@ exports.createStudent = async (req, res) => {
       feesPaid: 0
     });
 
-    res.status(201).json(student);
+    res.status(201).json({ message: "Student registered successfully!", student });
   } catch (error) {
-    res.status(500).json({ message: "Student creation failed" });
+    console.error("Create Student Error:", error);
+    res.status(400).json({ message: error.message || "Student creation failed" });
   }
 };
 
@@ -212,7 +212,7 @@ exports.getAllStudents = async (req, res) => {
     const students = await Student.find({ school: req.user.school }).sort({ class: 1, rollNo: 1 }).lean(); 
     res.json(students);
   } catch (error) {
-    res.status(500).json({ message: "Server Error" });
+    res.status(500).json({ message: error.message || "Server Error" });
   }
 };
 
@@ -223,18 +223,20 @@ exports.updateStudent = async (req, res) => {
         req.body, 
         { new: true }
     );
-    res.json(updated);
+    res.json({ message: "Student updated successfully!", student: updated });
   } catch (error) {
-    res.status(500).json({ message: "Update failed" });
+    console.error("Update Student Error:", error);
+    res.status(400).json({ message: error.message || "Update failed" });
   }
 };
 
 exports.deleteStudent = async (req, res) => {
   try {
     await Student.findOneAndDelete({ _id: req.params.id, school: req.user.school });
-    res.json({ message: "Student deleted" });
+    res.json({ message: "Student deleted successfully!" });
   } catch (error) {
-    res.status(500).json({ message: "Delete failed" });
+    console.error("Delete Student Error:", error);
+    res.status(500).json({ message: error.message || "Delete failed" });
   }
 };
 
@@ -243,7 +245,7 @@ exports.getStudentsByClass = async (req, res) => {
     const students = await Student.find({ school: req.user.school, class: req.params.className }).lean();
     res.json(students);
   } catch (error) {
-    res.status(500).json({ message: "Fetch failed" });
+    res.status(500).json({ message: error.message || "Fetch failed" });
   }
 };
 
@@ -262,12 +264,13 @@ exports.createSchedule = async (req, res) => {
       ]
     });
 
-    if (conflict) return res.status(400).json({ message: `Time conflict with ${conflict.subject}` });
+    if (conflict) return res.status(400).json({ message: `Time conflict detected with ${conflict.subject}` });
 
     const schedule = await Schedule.create({ ...req.body, school: schoolId });
-    res.status(201).json(schedule);
+    res.status(201).json({ message: "Schedule slot created successfully!", schedule });
   } catch (error) {
-    res.status(500).json({ message: "Failed to create schedule slot" });
+    console.error("Create Schedule Error:", error);
+    res.status(400).json({ message: error.message || "Failed to create schedule slot" });
   }
 };
 
@@ -277,16 +280,17 @@ exports.getSchedules = async (req, res) => {
     const schedules = await Schedule.find(filter).populate("teacher", "name").sort({ startTime: 1 }).lean();
     res.json(schedules);
   } catch (error) {
-    res.status(500).json({ message: "Failed to fetch schedules" });
+    res.status(500).json({ message: error.message || "Failed to fetch schedules" });
   }
 };
 
 exports.deleteSchedule = async (req, res) => {
   try {
     await Schedule.findOneAndDelete({ _id: req.params.id, school: req.user.school });
-    res.json({ message: "Deleted" });
+    res.json({ message: "Schedule deleted successfully!" });
   } catch (error) {
-    res.status(500).json({ message: "Delete failed" });
+    console.error("Delete Schedule Error:", error);
+    res.status(500).json({ message: error.message || "Delete failed" });
   }
 };
 
@@ -297,28 +301,35 @@ exports.getAllMaterialsAdmin = async (req, res) => {
     const materials = await Material.find({ school: req.user.school }).populate("teacher", "name").lean();
     res.json(materials);
   } catch (error) {
-    res.status(500).json({ message: "Fetch failed" });
+    res.status(500).json({ message: error.message || "Fetch failed" });
   }
 };
 
 exports.deleteMaterialAdmin = async (req, res) => {
   try {
     await Material.findOneAndDelete({ _id: req.params.id, school: req.user.school });
-    res.json({ message: "Material removed" });
+    res.json({ message: "Material removed successfully!" });
   } catch (error) {
-    res.status(500).json({ message: "Delete failed" });
+    console.error("Delete Material Error:", error);
+    res.status(500).json({ message: error.message || "Delete failed" });
   }
 };
 
-// --- DASHBOARD STATS ---
+// --- DASHBOARD STATS (UPDATED FOR ADMIN DASHBOARD UI) ---
 
 exports.getAdminStats = async (req, res) => {
   try {
     const schoolId = req.user.school;
-    const [tCount, cCount, sCount] = await Promise.all([
+    
+    // Fetch counts and recent items concurrently for speed
+    const [tCount, cCount, sCount, recentTeachers, recentStudents] = await Promise.all([
       Teacher.countDocuments({ school: schoolId }),
       Class.countDocuments({ school: schoolId }),
-      Student.countDocuments({ school: schoolId })
+      Student.countDocuments({ school: schoolId }),
+      // Fetch 5 most recent teachers
+      Teacher.find({ school: schoolId }).sort({ createdAt: -1 }).limit(5).select("name email"),
+      // Fetch 5 most recent students
+      Student.find({ school: schoolId }).sort({ createdAt: -1 }).limit(5).select("name class section")
     ]);
 
     const finances = await Student.aggregate([
@@ -338,10 +349,14 @@ exports.getAdminStats = async (req, res) => {
       financials: { 
         collected: finances[0]?.collected || 0, 
         pending: (finances[0]?.total || 0) - (finances[0]?.collected || 0) 
-      }
+      },
+      // Pass these directly to populate the "New Registrations" UI
+      recentTeachers: recentTeachers || [],
+      recentStudents: recentStudents || [],
     });
   } catch (error) {
-    res.status(500).json({ message: "Server Error" });
+    console.error("Admin Stats Error:", error);
+    res.status(500).json({ message: error.message || "Server Error" });
   }
 };
 
@@ -350,9 +365,10 @@ exports.getAdminStats = async (req, res) => {
 exports.createNotice = async (req, res) => {
   try {
     const notice = await Notice.create({ ...req.body, school: req.user.school, postedBy: req.user._id });
-    res.status(201).json(notice);
+    res.status(201).json({ message: "Notice posted successfully!", notice });
   } catch (error) {
-    res.status(500).json({ message: "Post failed" });
+    console.error("Create Notice Error:", error);
+    res.status(400).json({ message: error.message || "Failed to post notice" }); 
   }
 };
 
@@ -361,25 +377,27 @@ exports.getAllNoticesAdmin = async (req, res) => {
     const notices = await Notice.find({ school: req.user.school }).sort({ createdAt: -1 }).lean();
     res.json(notices);
   } catch (error) {
-    res.status(500).json({ message: "Fetch failed" });
+    res.status(500).json({ message: error.message || "Fetch failed" });
   }
 };
 
 exports.updateNotice = async (req, res) => {
   try {
     const updated = await Notice.findOneAndUpdate({ _id: req.params.id, school: req.user.school }, req.body, { new: true });
-    res.json(updated);
+    res.json({ message: "Notice updated successfully!", notice: updated });
   } catch (error) {
-    res.status(500).json({ message: "Update failed" });
+    console.error("Update Notice Error:", error);
+    res.status(400).json({ message: error.message || "Update failed" });
   }
 };
 
 exports.deleteNotice = async (req, res) => {
   try {
     await Notice.findOneAndDelete({ _id: req.params.id, school: req.user.school });
-    res.json({ message: "Notice deleted" });
+    res.json({ message: "Notice deleted successfully!" });
   } catch (error) {
-    res.status(500).json({ message: "Delete failed" });
+    console.error("Delete Notice Error:", error);
+    res.status(500).json({ message: error.message || "Delete failed" });
   }
 };
 
@@ -390,7 +408,7 @@ exports.getAdminProfile = async (req, res) => {
     const admin = await Admin.findById(req.user._id).select("-password").lean();
     res.json(admin);
   } catch (error) {
-    res.status(500).json({ message: "Server Error" });
+    res.status(500).json({ message: error.message || "Server Error" });
   }
 };
 
@@ -405,8 +423,9 @@ exports.updateAdminProfile = async (req, res) => {
     if (password && password.trim() !== "") admin.password = await bcrypt.hash(password, 10);
     
     await admin.save();
-    res.json({ message: "Profile updated successfully" });
+    res.json({ message: "Profile updated successfully!" });
   } catch (error) {
-    res.status(500).json({ message: "Update failed" });
+    console.error("Update Profile Error:", error);
+    res.status(400).json({ message: error.message || "Update failed" });
   }
 };
