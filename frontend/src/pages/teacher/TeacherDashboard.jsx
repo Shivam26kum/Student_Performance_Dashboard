@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { getAdminStats } from "../../api/teacherApi";
+import { getDashboardStats } from "../../api/teacherApi";
 import { 
   Users, TrendingUp, CalendarCheck, AlertCircle, RefreshCw,
   Clock, BookOpen, GraduationCap, Megaphone, Filter, Layers, Calendar
