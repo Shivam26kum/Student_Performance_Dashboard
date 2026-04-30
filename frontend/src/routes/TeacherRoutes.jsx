@@ -1,4 +1,6 @@
 import { Routes, Route, Outlet } from "react-router-dom";
+import TeacherLayout from "../layouts/TeacherLayout";
+
 import TeacherSidebar from "../components/teacher/TeacherSidebar";
 import TeacherDashboard from "../pages/teacher/TeacherDashboard";
 import TeacherStudents from "../pages/teacher/TeacherStudents";
@@ -11,33 +13,6 @@ import TeacherRoutine from "../pages/teacher/TeacherRoutine";
 import TeacherMaterials from "../pages/teacher/TeacherMaterials";
 import TeacherProfile from "../pages/teacher/TeacherProfile";
 
-// --- RESTORED RESPONSIVE LAYOUT ---
-const TeacherLayout = () => (
-  <div className="flex h-screen w-full bg-gray-50 overflow-hidden">
-    <TeacherSidebar />
-
-    <div className="flex-1 flex flex-col h-full relative overflow-hidden">
-      
-      {/* Mobile: This main tag scrolls. Desktop: locks height so internal cards scroll */}
-      <main className="flex-1 w-full h-full overflow-y-auto lg:overflow-hidden custom-scrollbar">
-        
-        {/* CRITICAL FIX: Padding (pt-24) is handled centrally here to clear the mobile header.
-            min-h-full allows the page to stretch naturally on mobile. */}
-        <div className="max-w-7xl mx-auto w-full h-auto min-h-full lg:h-full flex flex-col p-4 pt-24 sm:p-6 sm:pt-24 lg:p-8">
-          <Outlet /> 
-        </div>
-        
-      </main>
-    </div>
-
-    {/* Global custom scrollbar styling */}
-    <style dangerouslySetInnerHTML={{__html: `
-      .custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
-      .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-      .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
-    `}} />
-  </div>
-);
 
 export default function TeacherRoutes() {
   return (
