@@ -63,12 +63,19 @@ export default function TeacherDashboard() {
   }, []);
 
   const fetchData = useCallback(async () => {
-    if (!selectedClassId || classes.length === 0) return;
+    // FIX APPLIED HERE: Set loading to false if we exit early!
+    if (!selectedClassId || classes.length === 0) {
+      setLoading(false); 
+      return;
+    }
     
     setLoading(true);
     try {
       const currentClass = classes.find(c => `${c.classGrade}-${c.section}-${c.subject}` === selectedClassId);
-      if (!currentClass) return;
+      if (!currentClass) {
+        setLoading(false); // Make sure to turn off loading here too
+        return;
+      }
 
       const yearConfig = ACADEMIC_YEARS.find(y => y.label === academicYear);
       const query = `?classGrade=${currentClass.classGrade}&section=${currentClass.section}&subject=${encodeURIComponent(currentClass.subject)}&startDate=${yearConfig.start}&endDate=${yearConfig.end}`;
