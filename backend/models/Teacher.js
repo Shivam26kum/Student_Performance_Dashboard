@@ -6,12 +6,16 @@ const teacherSchema = new mongoose.Schema({
   password: { type: String, required: true },
   phone: { type: String },
   
-  // 👇 CHANGE THIS: Instead of single classGrade/section/subject
   assignedClasses: [
     {
-      classGrade: { type: String, required: true },
-      section: { type: String, required: true },
-      subject: { type: String, required: true }
+      classGrade: { type: String, required: true, trim: true },
+      section: { 
+        type: String, 
+        // REMOVED required: true
+        default: "", // Defaults to empty string
+        trim: true 
+      },
+      subject: { type: String, required: true, trim: true }
     }
   ],
   

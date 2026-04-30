@@ -13,11 +13,14 @@ const studentSchema = new mongoose.Schema({
   },
   class: { 
     type: String, 
-    required: true 
+    required: true,
+    trim: true // Added trim here just to be safe!
   },
   section: { 
     type: String, 
-    required: true 
+    // REMOVED required: true
+    default: "", // Defaults to empty string if no section is given
+    trim: true 
   },
   teacher: { 
     type: mongoose.Schema.Types.ObjectId, 
@@ -39,20 +42,18 @@ const studentSchema = new mongoose.Schema({
   feesTotal: { 
     type: Number, 
     default: 0 
-  }, // This will be: Base Monthly Fee + Late Penalty (if applicable)
+  }, 
   
   feesPaid: { 
     type: Number, 
     default: 0 
-  }, // Amount paid for the current billing cycle
+  },
 
-  // Tracks which month the current 'feesTotal' belongs to (e.g., "April 2026")
   currentBillingMonth: {
     type: String,
     default: () => new Date().toLocaleString('default', { month: 'long', year: 'numeric' })
   },
 
-  // Stores the specific penalty amount applied this month for record-keeping
   appliedPenalty: {
     type: Number,
     default: 0
@@ -60,7 +61,7 @@ const studentSchema = new mongoose.Schema({
 
 }, { timestamps: true });
 
-// Index for faster lookups when the Admin searches for students by class/section
+// Index for faster lookups
 studentSchema.index({ school: 1, class: 1, section: 1, rollNo: 1 }, { unique: true });
 
 module.exports = mongoose.model("Student", studentSchema);
